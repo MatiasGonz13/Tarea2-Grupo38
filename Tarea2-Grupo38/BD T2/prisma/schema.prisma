@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+
+//To migrate this file use the command: npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Personajes {
+  id               Int      @id @default(autoincrement())
+  nombre           String   @db.VarChar(45)
+  fuerza           Int      @db.Integer
+  fecha_nacimiento DateTime @db.Date()
+  objeto           String?  @db.VarChar(30)
+
+  karts Karts[]
+  personaje_tiene_trabajo Personaje_tiene_trabajo[]
+  personaje_habita_reino Personaje_habita_reino[]
+}
+
+model Karts {
+  id               Int @id @default(autoincrement())
+  modelo           String @db.VarChar(45)
+  color            String @db.VarChar(45)
+  velocidad_maxima Int? @db.Integer
+  id_personaje     Int @db.Integer
+
+  personajes Personajes @relation(fields: [id_personaje], references: [id]) 
+}
+
+model Trabajos {
+  id          Int @id @default(autoincrement())
+  descripcion String? @db.VarChar(45)
+  sueldo      Int @db.Integer
+
+  personaje_tiene_trabajo Personaje_tiene_trabajo[]
+}
+
+model Personaje_tiene_trabajo {
+  id_trabajo    Int @db.Integer
+  id_personaje  Int @db.Integer
+  @@id([id_trabajo, id_personaje])
+  fecha_inicio  DateTime @db.Date
+  fecha_termino DateTime? @db.Date
+
+  trabajos Trabajos @relation(fields: [id_trabajo], references: [id])
+  personajes Personajes @relation(fields: [id_personaje], references: [id])
+}
+
+model Defensas {
+  id      Int @id @default(autoincrement())
+  defensa String @db.VarChar(45)
+
+  defensas_en_reino Defensas_en_reinos[]
+}
+
+model Reinos {
+  id         Int @id @default(autoincrement())
+  nombre     String @db.VarChar(45)
+  ubicacion  String @db.VarChar(45)
+  superficie Int @db.Integer
+
+  defensas_en_reino Defensas_en_reinos[]
+  personaje_habita_reino Personaje_habita_reino[]
+  diplomacias1 Diplomacias[] @relation("reinos1")
+  diplomacias2 Diplomacias[] @relation("reinos2")
+}
+
+model Defensas_en_reinos {
+  id_reino    Int @db.Integer
+  id_defensa  Int @db.Integer
+  @@id([id_reino, id_defensa])
+  meses_de_uso Int @db.Integer
+
+  reinos Reinos @relation(fields: [id_reino], references: [id])
+  defensas Defensas @relation(fields: [id_defensa], references: [id])
+}
+
+model Diplomacias {
+  id_reino_1 Int @db.Integer
+  id_reino_2 Int @db.Integer
+  @@id([id_reino_1, id_reino_2])
+  es_aliado  Boolean
+
+  reinos1 Reinos @relation("reinos1", fields: [id_reino_1], references: [id])
+  reinos2 Reinos @relation("reinos2", fields: [id_reino_2], references: [id])
+}
+
+model Personaje_habita_reino {
+  id_personaje   Int @db.Integer
+  id_reino       Int @db.Integer
+  @@id([id_personaje, id_reino])
+  fecha_registro DateTime @db.Timestamp()
+  es_gobernante  Boolean @db.Boolean
+
+  personajes Personajes @relation(fields: [id_personaje], references: [id])
+  reinos Reinos @relation(fields: [id_reino], references: [id])
+}
